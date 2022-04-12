@@ -1,0 +1,396 @@
+video::-webkit-media-controls-enclosure {
+  overflow: hidden;
+}
+
+video::-webkit-media-controls-panel {
+  display: none;
+}
+.video {
+  border: 1px solid black;
+  background-image: url("../images/calling.png");
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media screen and (max-width: 480px) {
+  .video {
+    width: 100%;
+  }
+  #itemArea {
+    /* position:fixed; */
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    border-top: 1px solid #e5e5ff;
+    background-color: #f5f5ff;
+    z-index: 998;
+    /* ↓追加 */
+    transition: 0.5s;
+  }
+  #startVideoButton,
+  #startScreenShareButton,
+  #showLinkButton {
+    display: none;
+  }
+  .imgButton {
+    width: 33%;
+    height: 100%;
+    float: left;
+  }
+  .imgButton img {
+    height: 100%;
+    margin-bottom: 10px;
+  }
+}
+@media screen and (min-width: 481px) {
+  .video {
+    width: 470px;
+    height: 360px;
+  }
+  #itemArea {
+    position: fixed;
+    top: 30px;
+    left: 0;
+    width: 60px;
+    padding: 5px;
+    height: 100%;
+    border-right: 1px solid #e5e5ff;
+    border-bottom: 1px solid #e5e5ff;
+    background-color: #f5f5ff;
+    z-index: 998;
+    transition: 0.5s;
+  }
+  div#videoArea {
+    position: relative;
+    top: 30px;
+    left: 0;
+    padding-left: 80px;
+    background-color: black;
+    height: 100%;
+    width: 100%;
+    display: flex;
+  }
+  .imgButton img {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  background-color: black;
+}
+#base {
+  position: relative;
+  height: 100%;
+}
+.imgButton {
+  background-color: rgba(255, 255, 255, 0);
+  border: 0 solid #fff;
+  cursor: pointer;
+}
+
+#header {
+  position: fixed;
+  z-index: 999;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background-color: #666;
+  color: white;
+  padding-left: 5px;
+  border-bottom: 1px solid #999;
+  margin: 0;
+  font-family: arial, sans-serif;
+  font-size: 15px;
+  height: 30px;
+}
+
+#header img {
+  margin-top: 5px;
+  height: 20px;
+}
+
+.dialog {
+  position: fixed;
+  background-color: white;
+  top: 40%;
+  left: 25%;
+  width: 50%;
+  height: 20%;
+  border-radius: 10px;
+  z-index: 9999;
+  text-align: center;
+  padding: 10px;
+  display: table-cell;
+  vertical-align: middle;
+  display: none;
+  opacity: 0;
+}
+
+.square_btn {
+  position: relative;
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  text-decoration: none;
+  color: #fff;
+  background: #666666; /*背景色*/
+  border-bottom: solid 2px #333333; /*少し濃い目の色に*/
+  border-radius: 4px; /*角の丸み*/
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    0 2px 2px rgba(0, 0, 0, 0.19);
+  font-weight: bold;
+}
+
+.square_btn:active {
+  border-bottom: solid 2px #aaa;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.inputText {
+  font-size: 30px;
+  line-height: 30px;
+  height: 40px;
+  padding: 5px;
+  border-radius: 7px 0 0 7px;
+  border-color: #666;
+  box-sizing: border-box;
+  position: relative;
+  top: -4px;
+}
+
+.textButton {
+  box-sizing: border-box;
+  height: 40px;
+  border-radius: 0 7px 7px 0;
+  position: relative;
+  top: 0;
+}
+
+.textButton img {
+  height: 100%;
+}
+
+.inputArea {
+  position: relative;
+}
+
+#video_wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#my_video_area {
+  position: relative;
+}
+
+.username {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #333333;
+  color: white;
+  font-size: 20px;
+  padding: 0 12px;
+  height: 35px;
+  line-height: 35px;
+  text-align: center;
+}
+
+.remoteArea {
+  position: relative;
+}
+
+.remoteName {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #333333;
+  color: white;
+  font-size: 20px;
+  height: 35px;
+  padding: 0 12px;
+  line-height: 35px;
+  text-align: center;
+}
+
+.handImg {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+}
+
+/* 以下、追加 */
+#itemArea.itemArea-open {
+  width: 70%;
+  background-color: rgba(186, 208, 214, 0.7);
+}
+
+.setting-area {
+  margin: 5px 10px;
+  display: none;
+  flex-direction: column;
+  text-align: center;
+  border: solid 3px #333333;
+  border-radius: 5px;
+}
+
+.video-setting-title {
+  background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0) 50%, #ff6);
+}
+
+.setting-area p {
+  font-size: 16px;
+  text-align: center;
+  margin: 0;
+  font-weight: bold;
+  background-color: rgba(131, 168, 189, 0.5);
+}
+.input-setting {
+  font-size: 16px;
+  margin-bottom: 5px;
+  width: 60px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+#video-setting-btn {
+  width: auto;
+  height: 40px;
+  margin: 0 5px 5px 5px;
+  font-size: 1rem;
+  color: white;
+  border-radius: 0.5em;
+  margin-top: 10px;
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+
+.setting-text {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.set-button {
+  margin-bottom: 10px;
+}
+
+
+#recording-setting {
+  display: none;
+}
+
+.recording-button {
+  display: flex;
+  justify-content: center;
+}
+
+button#btn-prepare {
+  font-size: 0.75rem;
+  border: 2px solid #5c5a5a;
+  margin: 0 2px;
+}
+
+button#btn-record {
+  font-size: 0.75rem;
+  border: 2px solid #5c5a5a;
+  margin: 0 2px;
+}
+
+button#btn-stop {
+  font-size: 0.75rem;
+  border: 2px solid #5c5a5a;
+  margin: 0 2px;
+}
+
+button#btn-video-start {
+  font-size: 0.75rem;
+  border: 2px solid #5c5a5a;
+  margin: 0 2px;
+}
+
+button#btn-download {
+  font-size: 0.75rem;
+  border: 2px solid #5c5a5a;
+  margin: 0 2px;
+}
+
+
+
+button#blink {
+  font-size: 0.75rem;
+  -webkit-animation: blink 1s ease-in-out infinite alternate;
+  animation: blink 1s ease-in-out infinite alternate;
+  background-color: crimson;
+  color: white;
+}
+
+@keyframes blink {
+  0% {
+    border: 3px solid #cc2200;
+  }
+  100% {
+    border: 3px solid #efefef;
+  }
+}
+
+#admin-setting {
+  display: none;
+  margin: 0 10px;
+  background-color: rgba(255, 136, 0, 0.5);
+  display: none;
+  border: solid 3px #ff0000;
+  border-radius: 5px;
+  text-align: center;
+}
+#admin-setting p {
+  margin: 5px 0;
+  font-weight: bold;
+}
+#admin-setting .p1 {
+  font-size: 16px;
+}
+#admin-setting .p2 {
+  font-size: 14px;
+  color: #ff0000;
+}
+
+#encrypted-area {
+  display: none;
+}
+
+/* モーダルウインドウ */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #f4f4f4;
+  margin: 0;
+  /* width: 30%; */
+  box-shadow: 0 5px 8px 0 rgba(0,0,0,0.2),0 7px 20px 0 rgba(0,0,0,0.17);
+  animation-name: modalopen;
+  animation-duration: 1s;
+}
+
+@keyframes modalopen {
+  from {opacity: 0}
+  to {opacity: 1}
+}

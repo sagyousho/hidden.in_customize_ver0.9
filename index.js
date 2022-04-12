@@ -1,0 +1,209 @@
+var express = require("express"),
+  fs = require("fs"),
+  path = require("path");
+var app = express();
+var port = process.env.PORT || 3000;
+var options = {
+  key: fs.readFileSync(process.env.KEY || "./cert/private.pem"),
+  cert: fs.readFileSync(process.env.CERT || "./cert/cert.pem"),
+};
+var server;
+if ("true" == process.env.HTTP) {
+  console.log("mode http");
+  server = require("http").createServer(app);
+} else {
+  console.log("mode https");
+  server = require("https").createServer(options, app);
+}
+var io = require("socket.io").listen(server);
+app.use(express.static("static"));
+app.get("/:channel", function (request, response) {
+  var filePath = path.join(__dirname, "static/screen.html");
+  var stat = fs.statSync(filePath);
+
+  response.writeHead(200, {
+    "Content-Type": "text/html",
+    "Content-Length": stat.size,
+    "Cross-Origin-Embedder-Policy": "require-corp",
+    "Cross-Origin-Opener-Policy": "same-origin"
+  });
+  var readStream = fs.createReadStream(filePath);
+  readStream.pipe(response);
+});
+server.listen(port, function (error) {
+  console.log("listening on *:" + port);
+});
+var store = {};
+var ifLastDislock = function (room) {
+  io.to(room).clients(function (e, clients) {
+    if (0 == clients.length) {
+      delete lockedRooms[room];
+    }
+  });
+};
+var lockedRooms = [];
+var chat = io.sockets.on("connection", function (socket) {
+  socket.on("join", function (req) {
+    if (lockedRooms[req.room]) {
+      io.to(socket.id).emit("lockouted", { id: socket.id, room: req.room });
+      return;
+    }
+    socket.room = req.room;
+    socket.join(req.room);
+    io.to(socket.id).emit("joined", { id: socket.id });
+    socket.broadcast
+      .to(socket.room)
+      .json.emit("otherJoined", { id: socket.id });
+  });
+  socket.on("offer", function (offer) {
+    socket.to(offer.targetId).emit("message", offer);
+  });
+  socket.on("message", function (message) {
+    socket.broadcast.to(socket.room).emit("message", message);
+  });
+  socket.on("candidate", function (message) {
+    socket.to(message.targetId).emit("message", message);
+  });
+  socket.on("stop", function () {
+    socket.leave(socket.room);
+    ifLastDislock(socket.room);
+    socket.broadcast.to(socket.room).emit("otherStoped", { id: socket.id });
+  });
+  socket.on("disconnect", function () {
+    ifLastDislock(socket.room);
+    socket.broadcast
+      .to(socket.room)
+      .emit("otherDisconnected", { id: socket.id });
+  });
+  socket.on("lock", function () {
+    lockedRooms[socket.room] = true;
+    socket.broadcast.to(socket.room).emit("locked");
+  });
+  socket.on("lock", function () {
+    lockedRooms[socket.room] = true;
+    socket.broadcast.to(socket.room).emit("locked");
+  });
+  socket.on("handup", function (id) {
+    socket.broadcast.to(socket.room).emit("otherHandUp", { id });
+  });
+  socket.on("mynamesend", function (id, name) {
+    socket.broadcast.to(socket.room).emit("othernamesend", { id, name });
+  });
+});
+
+// 設定データの編集処理
+
+/**
+ * 設定リクエスト処理
+ * 認証終了後、setting.JSONファイルを編集します
+ * @param {string} req.body.adminId
+ * @param {string} req.body.adminPassword
+ */
+
+// formで受け取るのでtrueに変更
+app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+
+app.post("/setting", (req, res) => {
+  //IDとハッシュ化したパスワードを設定、（今後、SQLにIDと共に保存推奨）
+  var hashedPassword =
+    "$2b$10$hJrQLuV0cDwt3UECMhihmuJWrogFNJbUQGoEwaVwOBaG26ID687di";
+
+  // 簡易認証（今後、SQLからデータを取り出しの認証を推奨）
+  let checkPassword = req.body.adminPassword;
+  // ハッシュ化したパスワードと照合、合っていればtrueが返ってくる
+  let passCheck = hashedPasswordCheck(checkPassword, hashedPassword);
+
+  if (passCheck) {
+    // 設定ファイル読み込み
+    let settingData = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, "./static/setting.json"))
+    );
+    // 設定ファイル書き込み
+    settingData.video.width = req.body.width;
+    settingData.video.height = req.body.height;
+    settingData.video.frameRate = req.body.frameRate;
+    settingData.update.ipAddress = req.ip;
+    settingData.update.date = new Date();
+    // 設定ファイル保存
+    fs.writeFileSync(
+      path.resolve(__dirname, "./static/setting.json"),
+      JSON.stringify(settingData, null, 2),
+      "utf-8"
+    );
+    // リロード処理(web会議URLに戻る)
+    let pathName = req.body.path; //web会議 部屋名
+    res.writeHead(303, { Location: pathName }); //２重送信防止
+    res.end();
+  } else {
+    res.send("ERROR: Password is incorrect");
+  }
+});
+
+app.post("/setting_remove", (req, res) => {
+  var hashedPassword =
+    "$2b$10$hJrQLuV0cDwt3UECMhihmuJWrogFNJbUQGoEwaVwOBaG26ID687di";
+  let checkPassword = req.body.adminPassword;
+  let passCheck = hashedPasswordCheck(checkPassword, hashedPassword);
+  if (passCheck) {
+    let settingData = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, "./static/setting.json"))
+    );
+    settingData.video.width = "";
+    settingData.video.height = "";
+    settingData.video.frameRate = "";
+    settingData.update.ipAddress = req.ip;
+    settingData.update.date = new Date();
+    fs.writeFileSync(
+      path.resolve(__dirname, "./static/setting.json"),
+      JSON.stringify(settingData, null, 2),
+      "utf-8"
+    );
+    let pathName = req.body.path;
+    res.writeHead(303, { Location: pathName });
+    res.end();
+  } else {
+    res.send("ERROR: Password is incorrect");
+  }
+});
+
+/**
+ * パスワードハッシュ化リクエスト処理
+ * @param {string} req.body.plain_text
+ */
+app.post("/encryption", (req, res) => {
+  let plainText = req.body.plain_text;
+  let hashedPassword = hashed(plainText);
+  res.send(hashedPassword);
+});
+
+/**
+ *パスワードのハッシュ化関数
+ * @param {string} password ハッシュ化するパスワード
+ * @returns ハッシュ化したパスワード []内の文字列
+ */
+function hashed(password) {
+  let bcrypt = require("bcrypt");
+  let hashedPassword = bcrypt.hashSync(password, 10);
+  return (
+    "Please copy and update the hashed password.  hashed_password -> [ " +
+    hashedPassword +
+    " ]"
+  );
+}
+
+/**
+ * ハッシュ化したパスワードとの照合関数
+ * @param {string} password
+ * @param {string} hashedPassword
+ * @returns true->OK false->NO
+ */
+function hashedPasswordCheck(password, hashedPassword) {
+  const bcrypt = require("bcrypt");
+  let check = bcrypt.compareSync(password, hashedPassword);
+  if (check) {
+    return true;
+  } else {
+    return false;
+  }
+}
