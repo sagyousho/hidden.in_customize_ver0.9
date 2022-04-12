@@ -295,6 +295,7 @@ function initVideoArea() {
 
 function startVideo() {
   reloadFunction = startVideo;
+  let checkAtem = checkAtemMiniDevices();
   // navigator.getUserMedia({ video: true, audio: true },
   //     function (stream) {
   //         prepareStream(stream);
@@ -308,7 +309,7 @@ function startVideo() {
   //         return;
   //   var medias = { video: true, audio: true };
   //設定値がある場合、映像設定を行う。
-  if (videoWidth) {
+  if (videoWidth && !checkAtem) {
     var medias = {
       audio: true,
       video: {
@@ -329,6 +330,27 @@ function startVideo() {
       if (firstActionForReload) {
         initVideoArea();
         firstActionForReload = false;
+      }
+      //Atem miniのデバイスが存在する場合映像を再設定
+      //libs.jsのcheckAtemDevices()で存在判定済み
+      if (videoWidth && !checkAtem) {
+        let videoTrack = localStream.getVideoTracks()[0];
+        let currentConstrains = videoTrack.getConstraints();
+        videoTrack
+          .applyConstraints({
+            width: videoWidth,
+            height: videoHeight,
+            frameRate: videoFps,
+            aspectRatio: aspectRatio,
+          })
+          .then(() => {
+            currentConstrains = videoTrack.getConstraints();
+            console.log("映像の設定値:", currentConstrains);
+          })
+          .catch((e) => {
+            console.log("制約を設定できませんでした:", e);
+            alert("ブラウザが対応していません\n推奨ブラウザ：Google chrome");
+          });
       }
     })
     .catch(function (error) {
@@ -550,6 +572,24 @@ function otherNameCreate(otherconf) {
   } else {
     console.log("名前が一緒");
     return;
+  }
+}
+
+/**
+ * ATEM miniデバイスが接続されているかチェック
+ */
+ async function checkAtemMiniDevices() {
+  //接続されているデバイス一覧を取得
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  // console.log(devices);
+  // Atem miniのでデバイスを検索
+  const AtemCheck = devices.find(device => device.label.includes('Atem mini'));
+  if (AtemCheck) {
+    console.log("Atem mini check : true" );
+    return true;
+  } else {
+    console.log("Atem mini check : false");
+    return false;
   }
 }
 
