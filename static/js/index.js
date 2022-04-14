@@ -333,7 +333,7 @@ function startVideo() {
       }
       //Atem miniのデバイスが存在する場合映像を再設定
       //libs.jsのcheckAtemDevices()で存在判定済み
-      if (videoWidth && !checkAtem) {
+      if (videoWidth && checkAtem) {
         let videoTrack = localStream.getVideoTracks()[0];
         let currentConstrains = videoTrack.getConstraints();
         videoTrack
@@ -349,7 +349,7 @@ function startVideo() {
           })
           .catch((e) => {
             console.log("制約を設定できませんでした:", e);
-            alert("ブラウザが対応していません\n推奨ブラウザ：Google chrome");
+            alert("映像設定できませんでした。リロードを行ってみてください");
           });
       }
     })
